@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class DepartmentController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DepartmentController.class);
 
-    private DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
 
     @PostMapping
     public ResponseEntity<Department> addDepartment(@RequestBody Department department) {
@@ -30,8 +30,8 @@ public class DepartmentController {
         return ResponseEntity.status(HttpStatus.FOUND).body(departmentRepository.findAll());
     }
 
-    @GetMapping("/${id}")
-    public ResponseEntity<Department> findById(@PathVariable Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> findById(@PathVariable Long id) {
         LOGGER.info("Department findById= {}", id);
         return ResponseEntity.status(HttpStatus.FOUND).body(departmentRepository.findById(id));
     }
