@@ -31,7 +31,7 @@ public class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Department> findById(@PathVariable Long id) {
+    public ResponseEntity<?> findById(@PathVariable Long id) {
         LOGGER.info("Department findById= {}", id);
         return ResponseEntity.status(HttpStatus.FOUND).body(departmentRepository.findById(id));
     }
