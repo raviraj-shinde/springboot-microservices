@@ -25,5 +25,5 @@ public class DepartmentRepository {
 
     public List<Department> findAll(){
         return departmentList;
-    }   
+    }
 }
