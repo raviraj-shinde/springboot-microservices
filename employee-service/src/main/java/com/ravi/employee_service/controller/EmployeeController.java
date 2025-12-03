@@ -37,11 +37,11 @@ public class EmployeeController {
         LOGGER.info("Called Employee - findById({})", id);
         return ResponseEntity.status(HttpStatus.FOUND).body(employeeRepo.findById(id));
     }
-    
+
     @GetMapping("/department/{departmentId}")
-    public ResponseEntity<List<Employee>> findByDepartment(@PathVariable Long departmentId){
+    public List<Employee> findByDepartment(@PathVariable Long departmentId){
         LOGGER.info("Called Employee - findByDepartment({})", departmentId);
-        return ResponseEntity.status(HttpStatus.FOUND).body(employeeRepo.findByDepartment(departmentId));
+        return employeeRepo.findByDepartment(departmentId);
     }
 
  }

@@ -1,5 +1,6 @@
 package com.ravi.department_service.controller;
 
+import com.ravi.department_service.client.EmployeeClient;
 import com.ravi.department_service.model.Department;
 import com.ravi.department_service.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class DepartmentController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DepartmentController.class);
 
     private final DepartmentRepository departmentRepository;
+    private final EmployeeClient employeeClient;
 
     @PostMapping
     public ResponseEntity<Department> addDepartment(@RequestBody Department department) {
@@ -34,6 +36,14 @@ public class DepartmentController {
     public ResponseEntity<?> findById(@PathVariable Long id) {
         LOGGER.info("Department findById= {}", id);
         return ResponseEntity.status(HttpStatus.FOUND).body(departmentRepository.findById(id));
+    }
+
+    @GetMapping("/{deptId}/employees")
+    public ResponseEntity<Department> getEmployeesByDepartment(@PathVariable Long deptId){
+        LOGGER.info("getEmployeesByDepartment department id = {}", deptId);
+        Department department = departmentRepository.findById(deptId);
+        department.setEmployees(employeeClient.findByDepartment(deptId));
+        return ResponseEntity.ok().body(department);
     }
 }
 
