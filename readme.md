@@ -7,14 +7,13 @@
 
 ## Project Structure
 ```
-microservices-root/
-├── config-server
-├── eureka-server
-├── api-gateway
-├── department-service
-├── employee-service
-├── docker-compose.yml    # contains zipkin service + others
-└── README.md
+ root
+    ├── config-server
+    ├── service-registery (eureka server)
+    ├── api-gateway
+    ├── department-service
+    ├── employee-service
+    └──docker-compose.yml    # contains zipkin
 ```
 ---
 
@@ -58,26 +57,11 @@ microservices-root/
 ---
 
 #### Main dependency:
-- Config Server : `spring-cloud-config-server` (Web UI comes built-in)
+- Config Server : `spring-cloud-config-server`.
 - No other Dependency required in this project
 ---
 
-#### Annotations: `@EnableConfigServer`
-
----
-
-#### How to add centralized config 
-
-- Requires the same service name as `spring.application.name`
-- Config files placed under:
-    ```
-    resources/config
-                │── application.yml (config-server's self)
-                │── employee-service.properties
-                │── department-service.properties
-    ```
-- Each microservice loads only its matching file.
-- Here properties of `config/...-service` are shown in their respective component sections.
+#### Annotation: `@EnableConfigServer`
 
 ---
 
@@ -91,14 +75,32 @@ microservices-root/
     ```
 -  2️⃣ Using External GitHub Repo (Recommended for real setups)....
 
+---
+
+#### How to add centralized config 
+
+- Requires the same service name as `spring.application.name`
+- Config files placed under:
+    ```
+    resources/config
+          │     │── api-gateway.properties 
+          │     │── employee-service.properties
+          │     └── department-service.properties
+          │
+          └── application.yml (config-server's self)
+
+    ```
+- Each microservice loads only its matching file.
+- Here properties of `config/...-service` are shown in their respective component sections.
+
 --------------------------------------------
 
-## B. eureka-server
+## B. service-registry (Eureka Server)
 --------------------------------------------
 
 #### Main dependency:
 - Eureka Server : `spring-cloud-starter-netflix-eureka-server` (Web UI comes built-in)
-- No other Dependency required in this service/server
+- No other Dependency required for this server
 ---
 
 #### Annotations: `@EnableEurekaServer`
@@ -121,36 +123,21 @@ eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server
 
 
 
-## C. api-gateway
+## C. api-gateway (non-Reactive)
 
 ---
 #### Main dependency:
-- Gateway : `spring-cloud-starter-gateway`
+- Gateway : `spring-cloud-starter-` `gateway`
+- Eureka Discovery Client : `spring-cloud-starter-` `netflix-eureka-client`
 
 ##### others - required for project
-- Eureka Discovery Client 
 - Spring Boot Actuator
 - Config Client
-- Zipkin (Spring Gives diffrent dipendency for diffrent versions)
+- Zipkin (Spring gives diffrent dipendency for diffrent versions)
 
 ---
 
-#### Annotations: `@EnableConfigServer`
-
----
-
-#### How to add centralized config 
-
-- Requires the same service name as `spring.application.name`
-- Config files placed under:
-    ```
-    resources/config
-                │── application.yml (config-server's self)
-                │── employee-service.properties
-                │── department-service.properties
-    ```
-- Each microservice loads only its matching file.
-- Here properties of `config/...-service` are shown in their respective component sections.
+#### Annotations: `@EnableDiscoveryClient`
 
 ---
 
@@ -164,10 +151,11 @@ eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka
 # Spring Config
 spring.config.import=optional:configserver:http://localhost:8088
 # Zipkin
+spring.zipkin.base-url=http://localhost:9411
 management.tracing.sampling.probability=1.0
 
 
-#API-GATEWAY *********
+#API-GATEWAY ********* api's for expose
 
 #for employee-service
 spring.cloud.gateway.routes[0].id=employee-service
@@ -181,12 +169,18 @@ spring.cloud.gateway.routes[1].uri=lb://department-service
 spring.cloud.gateway.routes[1].predicates[0]=Path=/department
 spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
 ```
+
+- It exposes the api's
+- Gateway is the first entry point
+- It propagates Sleuth/Zipkin trace IDs
+
 --------------------------------------------
 
 
 ## D. Business Services and Microservices Communication
 
 ---
+
 - Here are some common things `required` for to run the buisiness services `in microservices`.
 
 #### Common dependencies for `buisness-micro-services`, To work:
@@ -202,19 +196,18 @@ spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
 - Spring Boot Actuator
 
 
-
 ---
 
 #### Common Required Annotations Used: 
-1. `@EnableDiscoveryClient`
-2. No annotation❌ is needed for Config Clients
+1. `@EnableDiscoveryClient`.
+2. No annotation❌ is needed for Config Client.
 
 ------------------
 
 #### common properties 
 ```properties
 # Eureka Client
-eureka.instance.hostname=localhost  #🙏🏻otherwise.. error🫡
+eureka.instance.hostname=localhost  #otherwise maybe error
 eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka
 # Spring Config
 spring.config.import=optional:configserver:http://localhost:8088
@@ -234,20 +227,33 @@ spring.application.name=department-service
 server.port=8081
 ```
 
+<br>
+
 #### Annotations used to call emp-service api
-- `@HttpExchange` and `@GetExchange,` `...`for Client interface
+- `@HttpExchange` and `@GetExchange,` `...`for Employee `Client interface`
+
+<br>
 
 #### Project Structure
 ```
 java/department-service 
       ├── controller, model, repository etc
-      ├── client  ──> EmployeeClient.java
+      ├── client  ──> EmployeeClient.java (Client-Interface)
       └── config  ──> WebClientConfig.java
 ```
 
-#### EmployeeClient.java `@HttpExchange - interface `
+---
+
+<br>
+
+- <strong> Let's call the API `findByDepartment()` of `employee-service`</strong>
+
+<br>
+
+#### EmployeeClient.java `Client-interface `
 - `@HttpExchange` tells Spring to automatically create a dynamic proxy for the `interface`.
-- `@GetExchange("full link"), @PostExchange...` - above methods.
+- Needs method declarations only.
+- `@GetExchange`(`"full link"`), `@PostExchange...` - should be above method declarations.
 
 ```java
 @HttpExchange
@@ -257,6 +263,7 @@ public interface EmployeeClient {
     public List<Employee> findByDepartment(@PathVariable Long departmentId);
 }
 ```
+<br>
 
 #### WebClientConfig.java `Creating a @Beans`
 
@@ -292,6 +299,8 @@ public class WebClientConfig {
 - HttpServiceProxyFactory `turns the interface` EmployeeClient into a runtime HTTP client.
 - `The final result:` EmployeeClient looks like a normal Java interface, but under the hood it uses `WebClient + Eureka + Load Balancing + dynamic proxy` for HTTP calls.
 
+<br>
+
 #### Then in Controller
 
 ```java
@@ -303,7 +312,7 @@ public class DepartmentController {
     private final DepartmentRepository departmentRepository;
     private final EmployeeClient employeeClient;
 
-    .... //Check Project for other code
+    .... //Check Project for extra api's
 
     @GetMapping("/{deptId}/employees")
     public ResponseEntity<Department> getEmployeesByDepartment(@PathVariable Long deptId){
@@ -321,8 +330,28 @@ public class DepartmentController {
 - Here `Department` is a [model (click here to see code)](./department-service/src/main/java/com/ravi/department_service/model/Department.java)
 
 
-
 --------------------------------------------
+
+### D-2. employeee-service
+---
+
+#### Project Structure
+```
+java/department-service 
+      ├── controller (contains findByDepartment() API)
+      ├── model, repository etc
+      └── service  ──> DataInitialization.java
+```
+
+- findByDepartment() is `non-reactive`
+    - It returns a List<Employee>
+    - That is blocking / synchronous
+    - It does not stream data
+    - not returns `Flux<Employee>` or `Mono<List<Employee>>`
+
+<br>
+
+
 
 
 
