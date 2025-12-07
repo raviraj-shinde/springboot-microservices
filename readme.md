@@ -26,7 +26,7 @@
 <br>
 
 --------------------------------------------
-## Project Structure
+# Project Structure
 --------------------------------------------
 
 ```
@@ -42,7 +42,7 @@
 <br>
 
 --------------------------------------------
-## Architecture (Using Spring Cloud)
+# Architecture (Using Spring Cloud)
 --------------------------------------------
 
 ![architecture](./documentation/Project%20Architecture.png)
@@ -77,7 +77,7 @@
 <br>
 
 --------------------------------------------
-## zipkin-server (Distributed Tracing)
+# zipkin-server (Distributed Tracing)
 --------------------------------------------
  
 #### Running Zipkin using Docker
@@ -87,7 +87,7 @@
 <br>
 
 --------------------------------------------
-## A. config-server
+# A. config-server
 --------------------------------------------
 
 #### Main dependency:
@@ -131,7 +131,7 @@
 <br>
 
 --------------------------------------------
-## B. service-registry (Eureka Server)
+# B. service-registry (Eureka Server)
 --------------------------------------------
 
 #### Main dependency:
@@ -160,7 +160,7 @@ eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server
 <br>
 
 --------------------------------------------
-## C. api-gateway (non-Reactive)
+# C. api-gateway (non-Reactive)
 --------------------------------------------
 
 #### Main dependency:
@@ -215,7 +215,7 @@ spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
 <br>
 
 --------------------------------------------
-## D. Business Services and Microservices Communication
+# D. Business Services and Microservices Communication
 --------------------------------------------
 
 - Here are some common things `required` for to run the buisiness services `in microservices`.
@@ -256,7 +256,7 @@ management.tracing.sampling.probability=1.0    #Trace ALL(0-1.0)
 <br>
 
 --------------------------------------------
-### D-1. department-service 
+## D-1. department-service 
 ### `Calling employee-service api using WebClient (`Reactive`)`
 --------------------------------------------
 
@@ -371,7 +371,7 @@ public class DepartmentController {
 <br>
 
 --------------------------------------------
-### D-2. employeee-service
+## D-2. employeee-service
 --------------------------------------------
 
 #### Project Structure
@@ -391,7 +391,7 @@ java/department-service
 <br>
 
 --------------------------------------------
-### RECAP WORKFLOW
+# RECAP WORKFLOW
 --------------------------------------------
 
 1. Start Eureka Server (service registry)
