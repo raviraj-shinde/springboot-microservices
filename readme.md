@@ -1,11 +1,34 @@
 # Microservices Demonstration Project 
----
+--------------------------------------------
 
 ## Index
-1. Project Readme
-2. Microservices Readme
 
+- [Project Structure](#project-structure)
+- [Project Architecture](#architecture-using-spring-cloud)
+- [Recap Workflow](#recap-workflow) **
+
+
+0. [Zipkin Server](#zipkin-server-distributed-tracing)
+1. [Config Server](#a-config-server)
+2. [Service Registry (Eureka Server)](#b-service-registry-eureka-server)
+3. [API Gateway](#c-api-gateway-non-reactive)
+4. [Business Services & Microservices Communication](#d-business-services-and-microservices-communication)
+    - [Department Service](#d-1-department-service)
+    - [Employee Service](#d-2-employeee-service)
+
+<hr>
+
+- [Documentions Folder](./documentation/)
+- [Microservice-Notes.md](./documentation/readme%20notes/Microservices-Notes.md)
+- [WebClientConfig-Reusability.md](./documentation/readme%20notes/WebClientConfig%20Reusability.md)
+
+
+<br>
+
+--------------------------------------------
 ## Project Structure
+--------------------------------------------
+
 ```
  root
     ├── config-server
@@ -15,9 +38,12 @@
     ├── employee-service
     └──docker-compose.yml    # contains zipkin
 ```
----
 
+<br>
+
+--------------------------------------------
 ## Architecture (Using Spring Cloud)
+--------------------------------------------
 
 ![architecture](./documentation/Project%20Architecture.png)
 
@@ -43,27 +69,36 @@
 - Each service contains its own domain logic and database (if needed).
 - They focus purely on business functionality.
 
+<br>
+
 ---
 
 `⛓️‍💥NOTE:` `Ordered by execution flow; explanations are simplified instead of step-by-step.`
+<br>
 
----
+--------------------------------------------
+## zipkin-server (Distributed Tracing)
+--------------------------------------------
+ 
+#### Running Zipkin using Docker
+- `docker run -d -p 9411:9411 openzipkin/zipkin`
+- Zipkin UI is accessible at: http://localhost:9411.
 
-## zipkin-server
+<br>
 
----
-
+--------------------------------------------
 ## A. config-server
----
+--------------------------------------------
 
 #### Main dependency:
 - Config Server : `spring-cloud-config-server`.
 - No other Dependency required in this project
----
+
+<br>
 
 #### Annotation: `@EnableConfigServer`
 
----
+<br>
 
 #### Config properties 
 -  1️⃣ Using Local File System (native) (Inside Project)
@@ -75,7 +110,7 @@
     ```
 -  2️⃣ Using External GitHub Repo (Recommended for real setups)....
 
----
+<br>
 
 #### How to add centralized config 
 
@@ -93,19 +128,21 @@
 - Each microservice loads only its matching file.
 - Here properties of `config/...-service` are shown in their respective component sections.
 
---------------------------------------------
+<br>
 
+--------------------------------------------
 ## B. service-registry (Eureka Server)
 --------------------------------------------
 
 #### Main dependency:
 - Eureka Server : `spring-cloud-starter-netflix-eureka-server` (Web UI comes built-in)
 - No other Dependency required for this server
----
+
+<br>
 
 #### Annotations: `@EnableEurekaServer`
 
----
+<br>
 
 #### Server Properties 
 - Register itself🫡 as a `server`.
@@ -119,13 +156,13 @@ eureka.client.register-with-eureka=false
 eureka.client.fetch-registry=false
 eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server.port}/eureka/
 ```
----
 
+<br>
 
-
+--------------------------------------------
 ## C. api-gateway (non-Reactive)
+--------------------------------------------
 
----
 #### Main dependency:
 - Gateway : `spring-cloud-starter-` `gateway`
 - Eureka Discovery Client : `spring-cloud-starter-` `netflix-eureka-client`
@@ -135,11 +172,11 @@ eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server
 - Config Client
 - Zipkin (Spring gives diffrent dipendency for diffrent versions)
 
----
+<br>
 
 #### Annotations: `@EnableDiscoveryClient`
 
----
+<br>
 
 #### properties 
 ```properties
@@ -174,12 +211,12 @@ spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
 - Gateway is the first entry point
 - It propagates Sleuth/Zipkin trace IDs
 
+
+<br>
+
 --------------------------------------------
-
-
 ## D. Business Services and Microservices Communication
-
----
+--------------------------------------------
 
 - Here are some common things `required` for to run the buisiness services `in microservices`.
 
@@ -196,13 +233,13 @@ spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
 - Spring Boot Actuator
 
 
----
+<br>
 
 #### Common Required Annotations Used: 
 1. `@EnableDiscoveryClient`.
 2. No annotation❌ is needed for Config Client.
 
-------------------
+<br>
 
 #### common properties 
 ```properties
@@ -216,10 +253,12 @@ spring.zipkin.base-url=http://localhost:9411
 management.tracing.sampling.probability=1.0    #Trace ALL(0-1.0)
 ```
 
-------------------
+<br>
 
-### D-1. department-service calling employee-service api using WebClient (`Reactive`)
----
+--------------------------------------------
+### D-1. department-service 
+### `Calling employee-service api using WebClient (`Reactive`)`
+--------------------------------------------
 
 #### remaining properties 
 ```properties
@@ -329,11 +368,11 @@ public class DepartmentController {
 - Now you can get a bean of `EmployeeClient employeeClient` as we have created it, in config and client folders.
 - Here `Department` is a [model (click here to see code)](./department-service/src/main/java/com/ravi/department_service/model/Department.java)
 
+<br>
 
 --------------------------------------------
-
 ### D-2. employeee-service
----
+--------------------------------------------
 
 #### Project Structure
 ```
@@ -351,54 +390,28 @@ java/department-service
 
 <br>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--------------------------------------------
+### RECAP WORKFLOW
 --------------------------------------------
 
-# Other Notes
+1. Start Eureka Server (service registry)
+2. Start Config Server (central config)
+3. Start Zipkin (tracing)
+4. Run employee-service & department-service
+5. Both import config from Config Server
+6. Both register to Eureka
+7. Both send traces to Zipkin
+8. Run API Gateway
+9. Registers to Eureka
+10. Routes traffic using lb://
 
+ALL IMPORTANT DASHBOARD URLs
+- Eureka UI: http://localhost:8761/
+- Zipkin UI: http://localhost:9411/zipkin/
 
+<br>
 
-
-1️⃣ RestTemplate is old, blocking, and officially deprecated — not recommended for new microservices.
-2️⃣ WebClient is modern, non-blocking, reactive, and ideal for high-performance or external API calls.
-3️⃣ OpenFeign is declarative, simple, and the preferred choice for microservice-to-microservice communication.
-4️⃣ Feign integrates perfectly with Spring Cloud (Eureka, Load Balancing, Resilience4j).
-5️⃣ WebClient offers full control and supports streaming, async calls, and better scalability.
-6️⃣ Real-world rule: Use Feign inside microservices; use WebClient for external APIs; avoid RestTemplate for new development.
-
-
--- Each service runs separately but needs to talk to each other.
--- Spring Cloud gives solutions for common problems in microservices:
-
-🧰 Main Components of Spring Cloud (Super Simple)
-1️⃣ Eureka Server (Service Registry)
-2️⃣ Spring Cloud Config Server    
-3️⃣ Spring Cloud Gateway (API Gateway)
-4️⃣ Spring Cloud OpenFeign (Client-to-client calls) / WebClient / RestTemplate
-5️⃣ Resilience4j (Circuit Breaker)
-6️⃣ Zipkin + Sleuth (Distributed Tracing)
-
-```
-A typical Spring Cloud microservices setup:
-Gateway ← first entry
-Eureka ← service registry
-Config Server ← central configs
-Microservices ← Employee/Department/etc
-Feign ← service calls
-Sleuth + Zipkin ← tracing
-Resilience4j ← fault handling
-```
+--------------------------------------------
+--------------------------------------------
+# References and Resources:
+https://www.youtube.com/watch?v=HFl2dzhVuUo&t=15s

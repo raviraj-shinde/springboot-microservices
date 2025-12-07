@@ -1,0 +1,228 @@
+Understand the architectural in detail
+ Main components of Microservices except project are : 
+i.  Config Server
+ii. API gateway
+iii. Service registery
+
+------ other
+iv. Buisness services (emplyee-servie and department-service)
+v) Zipkin server
+
+
+2. Scale-up instances, manage etc - Service Registry work.( Netflix os something)
+
+3. Common config of micro-services - Config server work { Not Clear yet for me }
+
+4. You know other 1 i.e API gateway.
+
+5. Distributed log system : ZIPKIN
+     To track entire tracing of the log ex., Form which service to service log is created for Api.
+- Gives Dashboard to see.
+
+6. Buisness Services : 🫡 that project-services okay.
+
+7. Eureka Server ( From Netflix ) for service registry. create service (Project).
+Convert . properties yaml (opt)
+ Add @EnableEurekaServer
+- Register this service as a *server (self🫡)
+
+spring.application.name=service-registry
+server.port=8761
+
+eureka.instance.hostname=localhost // IP
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server.port}/eureka/
+
+
+8. department-service (temp).
+    - spring web
+    - Eureka Discovery Cleint
+    - Spring Boot Actuator
+    - config client
+
+   - Add @EnableDiscoverCleint
+   - But wait: where to connect. Hence eureka.client.serverUrl. defaultZone: http://localhost:8761/eureka/
+   - server.port
+   - spring.application.name
+
+
+9. Let's create config-server
+- config server (spring cloud config).
+ - server.port: 8088
+ - Add @ConfigServer
+ -  spring:
+       profile: 
+          active: native  (default is Get)
+ - Create config directory in resources.
+- create "buisness-service-name + .yaml" here department-service. yaml
+
+- cut all config except name and paste to it from department-service.
+ 
+- department-service/ ...yaml :
+   - now in import that config from ...
+  - how : spring.config.import=optional: configserver: http://localhost:8088
+- focus on optional as well, you can make it mandatory as well.
+
+10. Now let's add ZIPKIN
+   -  Start the server using Docker. (search and check commands from website.) 
+    - you can also download jar file and run locally using java -jar zipkin.jar
+
+     - "docker run -d -p 9411:9411 openzipkin/zipkin"
+
+    - add "zipkin" to all buisness service. (ex., department -service).
+    - it will add spring boot actuator  dependency also
+
+    - make sure you'll publish all the matrices to ZIPKIN.
+    default won't publish. (% of logs to UI)
+    - ADD mangement.tracing.sampling. probability: 1.0
+    - and ADD spring.zipkin.base-url=http://localhost:9411		    
+
+11. Initialize the department-service
+      - create service controller repository model.
+      - create #record Employee ( check what is it?) (Default getters🫡) model
+
+      - create Department model
+      - ... from 35:00 check
+      - 43.50 Added logger ? 🫡 Think, you know (For Zi..)
+      - Check for logs on localhost:9411 Zipkin if you have started server on it.
+
+
+12. Notes let's create the emploee-service
+- config client
+- zipkin
+- web
+- eureka discovery cleint 
+
+- Add some rest APIs (he skipped the part) Assume and create it's simple. Sorry he shown later from : 40:00.
+
+- Same Config server and eureka client properties. Add @EnableDiscoveryClient
+
+- Add Loggers.
+
+
+- Now You have to create one more API that will call an Emplyee-service api/data from department-service (Like Show all employees having dept #Mech etc)
+- Why ? We have to show how Microservice communicate each others.
+- Norrmal vs  kafka
+
+CONNECTING MICROSERVICES (COMMUNICATION)
+
+- We'll use HttpExchanger - SoringBoot 6 new part
+
+- We'll be communicating through  #service-registry WHY: because it knows which instance should call for load balancing and many more.
+
+*** Info *****
+To call that Microservices API's through server-registry,
+- we need Webclient ✅
+- RestTemplate is Depricated now.
+
+Webclient:
+- Dependency : It's included in "Spring Reactive Web". (Spring-boot-starter-webflux).
+- Search Why  is in it ? #Reactive 
+
+**** Procdure ******
+
++ Hence, goto department-service
+- Add "Webflux dependency" 
+- create "client" package. 
+- then create class "EmployeeClient Interface"
+- Annotate with @HttpExchange
+- We have @GetExchange() @PostExchange() etc
+- Paste just a declaration of method of Employee.  
+   --(Make some required changes as well(-_-))
+
+
+- To create a Bean of WebClient
+- Create "config" package. 
+- Create class "WebclientConfig".
+- Annotate class @Configuration 
+- - private final LoadbLancerExchangeFilterFuction filterFunction;
+- create method "employeeWebClient()" which will return "Webclient" to create Bean, Do Add @Bean also.
+
+"    private final LoadBalancedExchangeFilterFunction filterFunction;
+
+    @Bean
+    public WebClient employeeWebClient(){
+        return WebClient
+                .builder()
+                .filter(filterFunction)
+                .build();
+    }
+
+    @Bean
+    public EmployeeClient employeeClient(){
+        HttpServiceProxyFactory httpServiceProxyFactory =
+                HttpServiceProxyFactory
+                        .builder()
+                        .exchangeAdapter(WebClientAdapter.create(employeeWebClient()))
+                        .build();
+
+        return httpServiceProxyFactory.createClient(EmployeeClient.class);
+    }"
+
+
+- Now you will get Bean of EmployeeClient i.e... in DepartmentController
+
+- now you can Directly call methods of that interface using bean obj employeeClient.findByDepartment(...);
+by creating a API in DpartmentController
+
+**************************
+
+API - GATEWAY (-_-)
+
+api-gateway
+
+-  Gateway (spring-cloud-starter-gateway - You have to manually rename it, -  from default spring-cloud-starter-gateway-server-mvc❌)
+
+Otherwise It does NOT support:
+service discovery
+RoutePredicateFactories
+filters
+lb://
+auto-registration with Eureka
+
+- Actuator
+- Config-Client
+- Zipkin
+- Eureka Discovery Client
+
+-server.port=8060
+- eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
+- spring.config.import=optional:configserver:http://locahost:8088
+-management.tracing.sampling.probability=1.0
+
+**********In yaml format
+- spring:
+	cloud:
+		gateway:
+			routes:
+				- id: employee-service
+				   uri: lb://employee-service
+				   predicates:
+					- Path=/employee/**
+				
+				 - id: department-service
+				   uri: lb://departmen-service
+				   predicates:
+					- Path=/departmen/**
+
+**********
+
+--  You can shift this properties to config-server.
+
+
+***************FINISH*****************
+
+Don't forget to add spring.eureka.hostname=localhost
+for buisness service, otherwise you'll not be able to call microservicess apis's internally.
+
+
+
+
+Where I learned from:
+https://www.youtube.com/watch?v=HFl2dzhVuUo&t=15s
+
+here:-
+Eureka Dashboard: http://localhost:8761/
+Zipkin Dashboard: http://localhost:9411/zipkin/
+
