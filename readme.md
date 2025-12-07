@@ -1,6 +1,10 @@
 # Microservices Demonstration Project 
 --------------------------------------------
 
+# [ Click here - how-to-run.md](./how-to%20run.md)
+
+--------------------------------------------
+
 ## Index
 
 - [Project Structure](#project-structure)
@@ -83,6 +87,13 @@
 #### Running Zipkin using Docker
 - `docker run -d -p 9411:9411 openzipkin/zipkin`
 - Zipkin UI is accessible at: http://localhost:9411.
+
+<br>
+
+- Spring Boot 3 tracing does not use spring.zipkin.base-url (legacy Sleuth property, ignored in Boot 3).
+- ✅ `management.zipkin.tracing.endpoint=http://<zipkin-host>:9411` `/api/v2/spans` **
+- ❌ `spring.zipkin.base-url=http://<zipkin-host>:9411`
+
 
 <br>
 
@@ -188,7 +199,7 @@ eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka
 # Spring Config
 spring.config.import=optional:configserver:http://localhost:8088
 # Zipkin
-spring.zipkin.base-url=http://localhost:9411
+management.zipkin.tracing.endpoint=http://localhost:9411/api/v2/spans
 management.tracing.sampling.probability=1.0
 
 
@@ -210,6 +221,7 @@ spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
 - It exposes the api's
 - Gateway is the first entry point
 - It propagates Sleuth/Zipkin trace IDs
+- `API Gateway → Eureka → Business Services API's`
 
 
 <br>
@@ -249,7 +261,7 @@ eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka
 # Spring Config
 spring.config.import=optional:configserver:http://localhost:8088
 #Zipkin 
-spring.zipkin.base-url=http://localhost:9411
+management.zipkin.tracing.endpoint=http://localhost:9411/api/v2/spans
 management.tracing.sampling.probability=1.0    #Trace ALL(0-1.0)
 ```
 

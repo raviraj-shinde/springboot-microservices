@@ -1,0 +1,94 @@
+services:
+
+  service-registry:
+    build: ./service-registry
+    container_name: service-registry
+    image: service-registry:latest
+    ports:
+      - "8761:8761"
+    environment:
+      - eureka.instance.hostname=service-registry  #Overridden
+      - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/ #Overridden
+    networks:
+      - microservices-net
+
+
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    image: config-server:latest
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./config:/app/config
+    networks:
+      - microservices-net
+
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - microservices-net
+
+  department-service:
+    build: ./department-service
+    container_name: department-service
+    image: department-service:latest
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    ports:
+      - "8081:8081"
+    environment:
+      - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/ #Overridden
+      - spring.config.import=optional:configserver:http://config-server:8088 #Overridden
+      - management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans #Overridden 
+
+    networks:
+      - microservices-net
+
+
+  employee-service:
+    build: ./employee-service
+    container_name: employee-service
+    image: employee-service:latest
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    ports:
+      - "8082:8082"
+    environment:
+      - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/ #Overridden
+      - spring.config.import=optional:configserver:http://config-server:8088 #Overridden
+      - management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans #Overridden 
+
+    networks:
+      - microservices-net
+
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    image: api-gateway:latest
+    depends_on:
+      - service-registry
+      - config-server
+      - employee-service
+      - department-service
+    ports:
+      - "8060:8060"
+    environment:
+      - eureka.client.serviceUrl.defaultZone=http://service-registry:8761/eureka/  #Overridden
+      - spring.config.import=optional:configserver:http://config-server:8088 #Overridden 
+      - management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans #Overridden 
+    networks:
+      - microservices-net
+
+
+networks:
+  microservices-net:
+    driver: bridge
