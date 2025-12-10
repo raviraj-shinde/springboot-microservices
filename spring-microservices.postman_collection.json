@@ -1,0 +1,144 @@
+{
+	"info": {
+		"_postman_id": "3dc0c3b6-51de-48ba-bc56-e9f97a3d5c31",
+		"name": "spring-microservices",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "27225325"
+	},
+	"item": [
+		{
+			"name": "Department Service",
+			"item": [
+				{
+					"name": "Find All Departments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8060/department"
+					},
+					"response": []
+				},
+				{
+					"name": "Find by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8060/department/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Department",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": 1,\r\n  \"name\": \"IT\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8060/department"
+					},
+					"response": []
+				}
+			],
+			"description": "\\- These api's are called through api-gateway: http:localhost:8060/**"
+		},
+		{
+			"name": "employee-Service",
+			"item": [
+				{
+					"name": "Find All Employees",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8060/employee"
+					},
+					"response": []
+				},
+				{
+					"name": "Find By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8060/employee/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Find By Department",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8060/employee/department/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Employee",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": 101,\r\n  \"name\": \"John\",\r\n  \"departmentId\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8060/employee"
+					},
+					"response": []
+				}
+			],
+			"description": "\\- These api's are called through api-gateway: http:localhost:8060/**"
+		},
+		{
+			"name": "Get Employees By Dept.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{api-gateway}}/department/1/employees",
+				"description": "1. This API go through api-gateway to department-service\n    \n2. Tthen department-service will call to employee-service for emplyees by department\n    \n3. and then response comes form department-service."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "api-gateway",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
