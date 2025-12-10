@@ -49,7 +49,7 @@
 # Architecture (Using Spring Cloud)
 --------------------------------------------
 
-![architecture](./documentation/Project%20Architecture.png)
+![architecture](./documentation/Project%20Architecture.jpg)
 
 ---
 
@@ -205,17 +205,15 @@ management.tracing.sampling.probability=1.0
 
 #API-GATEWAY ********* api's for expose
 
-#for employee-service
-spring.cloud.gateway.routes[0].id=employee-service
-spring.cloud.gateway.routes[0].uri=lb://employee-service
-spring.cloud.gateway.routes[0].predicates[0]=Path=/employee
-spring.cloud.gateway.routes[0].predicates[1]=Path=/employee/**
-
 #for department-service
 spring.cloud.gateway.routes[1].id=department-service
 spring.cloud.gateway.routes[1].uri=lb://department-service
-spring.cloud.gateway.routes[1].predicates[0]=Path=/department
-spring.cloud.gateway.routes[1].predicates[1]=Path=/department/**
+spring.cloud.gateway.routes[1].predicates[0]=Path=/department/**
+
+#for employee-service
+spring.cloud.gateway.routes[0].id=employee-service
+spring.cloud.gateway.routes[0].uri=lb://employee-service
+spring.cloud.gateway.routes[0].predicates[0]=Path=/employee/**
 ```
 
 - It exposes the api's
@@ -271,6 +269,10 @@ management.tracing.sampling.probability=1.0    #Trace ALL(0-1.0)
 ## D-1. department-service 
 ### `Calling employee-service api using WebClient (`Reactive`)`
 --------------------------------------------
+
+#### Main Dependecy: `spring-boot-starter-` `webflux`
+
+<br>
 
 #### remaining properties 
 ```properties
